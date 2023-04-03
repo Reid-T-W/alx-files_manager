@@ -5,17 +5,9 @@ class DBClient {
     // Connection URL
     this.url = `mongodb://${host}:${port}`;
     this.client = new MongoClient(this.url);
-    this.client.connect();
-
-    // // Database Name
-    // const dbName = database;
-    // try {
-    //   this.client.connect();
-    // } catch (err) {
-    //   this.connected = false;
-    // }
-
-    this.db = this.client.db(dbName);
+    this.client.connect().then(() => {
+      this.db = this.client.db(database);
+    });
   }
 
   isAlive() {
@@ -23,13 +15,13 @@ class DBClient {
   }
 
   async nbUsers() {
-    const collection = this.client.db.collection('users');
+    const collection = this.db.collection('users');
     this.findResult = await collection.find({}).toArray();
     return (this.findResult.length);
   }
 
   async nbFiles() {
-    const collection = db.collection('files');
+    const collection = this.db.collection('files');
     const findResult = await collection.find({}).toArray();
     return (findResult.length);
   }
