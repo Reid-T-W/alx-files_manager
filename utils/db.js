@@ -16,14 +16,22 @@ class DBClient {
 
   async nbUsers() {
     const collection = this.db.collection('users');
-    this.findResult = await collection.find({}).toArray();
-    return this.findResult.length;
+    try {
+      this.findResult = await collection.find({}).toArray();
+      return this.findResult.length;
+    } catch (err) {
+      return 0;
+    }
   }
 
   async nbFiles() {
     const collection = this.db.collection('files');
-    const findResult = await collection.find({}).toArray();
-    return findResult.length;
+    try {
+      const findResult = await collection.find({}).toArray();
+      return findResult.length;
+    } catch (err) {
+      return 0;
+    }
   }
 }
 const dbClient = new DBClient();
