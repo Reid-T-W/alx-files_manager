@@ -1,4 +1,5 @@
 const sha1 = require('sha1');
+const { ObjectID } = require('mongodb');
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
 
@@ -38,8 +39,9 @@ class UsersController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const user = dbClient.db.collection('users').findOne({ _id: userId });
-    return res.json({ email: user.email, id: user._id });
+    const id = new ObjectID(userId);
+    const user = dbClient.db.collection('users').findOne({ _id: id });
+    return res.json({ email: user.email, id: userId });
   }
 }
 
