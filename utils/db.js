@@ -1,30 +1,31 @@
 const { MongoClient } = require('mongodb');
 
 class DBClient {
-  constructor(host = 'localhost', port = 27017, database = 'files_manager') {
+  constructor(host = '127.0.0.1', port = 27017, database = 'files_manager') {
     // Connection URL
-    const url = `mongodb://${host}:${port}`;
-    const client = new MongoClient(url);
+    this.url = `mongodb://${host}:${port}`;
+    this.client = new MongoClient(this.url);
+    this.client.connect();
 
-    // Database Name
-    const dbName = database;
-    try {
-      client.connect();
-    } catch (err) {
-      this.connected = false;
-    }
+    // // Database Name
+    // const dbName = database;
+    // try {
+    //   this.client.connect();
+    // } catch (err) {
+    //   this.connected = false;
+    // }
 
-    this.db = client.db(dbName);
+    this.db = this.client.db(dbName);
   }
 
   isAlive() {
-    return this.connected;
+    return this.client.isConnected();
   }
 
   async nbUsers() {
-    const collection = db.collection('users');
-    const findResult = await collection.find({}).toArray();
-    return (length(findResult));
+    const collection = this.client.db.collection('users');
+    this.findResult = await collection.find({}).toArray();
+    return (this.findResult.length);
   }
 
   async nbFiles() {
