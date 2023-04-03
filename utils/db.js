@@ -31,7 +31,7 @@ class DBClient {
   async nbFiles() {
     const collection = db.collection('files');
     const findResult = await collection.find({}).toArray();
-    return (length(findResult));
+    return (findResult.length);
   }
 }
 const dbClient = new DBClient();
