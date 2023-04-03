@@ -17,13 +17,13 @@ class DBClient {
   async nbUsers() {
     const collection = this.db.collection('users');
     this.findResult = await collection.find({}).toArray();
-    return (this.findResult.length);
+    return this.findResult.length;
   }
 
   async nbFiles() {
     const collection = this.db.collection('files');
     const findResult = await collection.find({}).toArray();
-    return (findResult.length);
+    return findResult.length;
   }
 }
 const dbClient = new DBClient();

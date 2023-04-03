@@ -8,9 +8,9 @@ export function getStatus(req, res) {
   return res.json({ redis, db });
 }
 
-export function getStats(req, res) {
-  const users = dbClient.nbUsers();
-  const files = dbClient.nbFiles();
+export async function getStats(req, res) {
+  const users = await dbClient.nbUsers();
+  const files = await dbClient.nbFiles();
 
   return res.json({ users, files });
 }
