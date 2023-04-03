@@ -16,7 +16,7 @@ class UsersController {
     const users = dbClient.db.collection('users');
     let user = await users.findOne({ email });
     if (user) {
-      return res.status(400).json({ error: 'Already exists' });
+      return res.status(400).json({ error: 'Already exist' });
     }
 
     // create user
