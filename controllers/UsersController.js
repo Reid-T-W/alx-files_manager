@@ -40,7 +40,7 @@ class UsersController {
     }
 
     const id = new ObjectID(userId);
-    const user = dbClient.db.collection('users').findOne({ _id: id });
+    const user = await dbClient.db.collection('users').findOne({ _id: id });
     return res.json({ email: user.email, id: userId });
   }
 }
