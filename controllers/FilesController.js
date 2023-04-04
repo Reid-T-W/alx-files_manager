@@ -1,9 +1,8 @@
 const uuidv4 = require('uuid').v4;
-const { builtinModules } = require('module');
-const dbClient = require('../utils/db');
-const redisClient = require('../utils/redis');
 const fs = require('fs');
 const { ObjectID } = require('mongodb');
+const dbClient = require('../utils/db');
+const redisClient = require('../utils/redis');
 
 class FilesController {
   static async postUpload(req, res) {
@@ -57,13 +56,17 @@ class FilesController {
     }
     // If its a file the following will be executed
     if (body.type == 'file' || body.type == 'image') {
-      if (!process.env.FOLDER_PATH) { 
-        const folderName = '/tmp/files_manager';
-        process.env['FOLDER_PATH'] = folderName;
+      const folderName = '/tmp/files_manager';
+      if (!process.env.FOLDER_PATH) {
+        if (body.parentId) {
+          process.env['FOLDER_PATH'] = `${folderName}/${body.parentId}`;
+        } else {
+          process.env['FOLDER_PATH'] = folderName;
+        }
       }
       try {
         if (!fs.existsSync(process.env.FOLDER_PATH)) {
-          fs.mkdirSync(folderName);
+          fs.mkdirSync(process.env.FOLDER_PATH);
         }
       } catch (err) {
         console.log(err);
@@ -87,6 +90,7 @@ class FilesController {
       const savedFile = file.ops[0];
       return res.status(201).json({ 'id': savedFile._id, userId: savedFile.userId, name: savedFile.name, type: savedFile.type, isPublic: savedFile.isPublic, parentId:savedFile.parentId});
     }
+    return
   }
 }
 
