@@ -105,6 +105,80 @@ class FilesController {
     }
     return null;
   }
+
+  static async getShow(req, res) {
+    const token = req.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
+    const { id } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const files = await dbClient.db.collection('files');
+    const file = await files.findOne({ _id: new ObjectID(id) });
+
+    if (!file) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    return res.json(file);
+  }
+
+  static async getIndex(req, res) {
+    const token = req.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
+    const { parentId = 0, page } = req.query;
+    const pageNum = page || 0;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const users = await dbClient.db.collection('users');
+    const user = await users.findOne({ _id: new ObjectID(userId) });
+    if (!user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const files = dbClient.db.collection('files');
+    let query;
+    if (!parentId) {
+      query = { userId: user._id };
+    } else {
+      query = { userId: user._id, parentId: ObjectID(parentId) };
+    }
+
+    files.aggregate(
+      [
+        { $match: query },
+        { $sort: { _id: -1 } },
+        {
+          $facet: {
+            metadata: [{ $count: 'total' }, { $addFields: { page: Number(pageNum) } }],
+            data: [{ $skip: 20 * Number(pageNum) }, { $limit: 20 }],
+          },
+        },
+      ],
+    ).toArray((err, data) => {
+      if (data) {
+        const final = data[0].data.map((file) => {
+          const temp = {
+            ...file,
+            id: file._id,
+          };
+          delete temp._id;
+          delete temp.localPath;
+          return temp;
+        });
+        return res.status(200).json(final);
+      }
+
+      return res.status(404).json({ error: 'Not found' });
+    });
+
+    return null;
+  }
 }
 
 module.exports = FilesController;
