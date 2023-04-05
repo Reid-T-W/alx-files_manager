@@ -203,7 +203,7 @@ class FilesController {
         return res.status(404).json({ error: 'Not found' });
       }
 
-      if (file.userId !== user._id) {
+      if (file.userId !== user._id.toHexString()) {
         return res.status(404).json({ error: 'Not found' });
       }
     }
