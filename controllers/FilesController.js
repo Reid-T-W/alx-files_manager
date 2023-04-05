@@ -147,7 +147,7 @@ class FilesController {
     if (!parentId) {
       query = { userId: user._id };
     } else {
-      query = { userId: user._id, parentId: ObjectID(parentId) };
+      query = { userId: user._id, _id: ObjectID(parentId) };
     }
 
     files.aggregate(
