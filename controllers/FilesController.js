@@ -152,7 +152,7 @@ class FilesController {
 
     files.aggregate(
       [
-        { $match: { query } },
+        { $match: query },
         { $sort: { _id: -1 } },
         {
           $facet: {
