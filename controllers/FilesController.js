@@ -129,8 +129,7 @@ class FilesController {
   static async getIndex(req, res) {
     const token = req.headers['x-token'];
     const userId = await redisClient.get(`auth_${token}`);
-    const { parentId = 0, page } = req.query;
-    const pageNum = page || 0;
+    const { parentId = 0, page = 0 } = req.query;
 
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -156,8 +155,8 @@ class FilesController {
         // { $sort: { _id: -1 } },
         {
           $facet: {
-            metadata: [{ $count: 'total' }, { $addFields: { page: Number(pageNum) } }],
-            data: [{ $skip: 20 * Number(pageNum) }, { $limit: 20 }],
+            metadata: [{ $count: 'total' }, { $addFields: { page: Number(page) } }],
+            data: [{ $skip: 20 * Number(page) }, { $limit: 20 }],
           },
         },
       ],
@@ -178,7 +177,7 @@ class FilesController {
       return res.status(404).json({ error: 'Not found' });
     });
 
-    return null;
+    return [];
   }
 
   static async getFile(req, res) {
