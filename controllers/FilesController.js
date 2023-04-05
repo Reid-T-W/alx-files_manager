@@ -153,7 +153,7 @@ class FilesController {
     files.aggregate(
       [
         { $match: query },
-        { $sort: { _id: -1 } },
+        // { $sort: { _id: -1 } },
         {
           $facet: {
             metadata: [{ $count: 'total' }, { $addFields: { page: Number(pageNum) } }],
