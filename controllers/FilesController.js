@@ -235,10 +235,21 @@ class FilesController {
     // If no file document is linked to the user and the ID passed as parameter
     // return an error
     const files = await dbClient.db.collection('files');
-    const file = await files.findOne({ _id: docId });
-    if (!file || file.userId !== userId) {
+
+    const userfile = await files.findOne({ userId });
+    if (!userfile) {
       return res.status(404).json({ error: 'Not found' });
     }
+
+    const fileBasedOnId = await files.findOne({ _id: docId });
+    if (!fileBasedOnId) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    // const file = await files.findOne({ _id: docId });
+    // if (!file || file.userId !== userId) {
+    //   return res.status(404).json({ error: 'Not found' });
+    // }
     // Set isPublic to true
     await files.updateOne({ _id: docId }, { $set: { isPublic: true } });
     const updateFile = await files.findOne({ _id: docId });
@@ -266,10 +277,20 @@ class FilesController {
     // If no file document is linked to the user and the ID passed as parameter
     // return an error
     const files = await dbClient.db.collection('files');
-    const file = await files.findOne({ _id: docId });
-    if (!file || file.userId !== userId) {
+
+    const userfile = await files.findOne({ userId });
+    if (!userfile) {
       return res.status(404).json({ error: 'Not found' });
     }
+
+    const fileBasedOnId = await files.findOne({ _id: docId });
+    if (!fileBasedOnId) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    // const file = await files.findOne({ _id: docId });
+    // if (!file || file.userId !== userId) {
+    //   return res.status(404).json({ error: 'Not found' });
+    // }
     // Set isPublic to false
     await files.updateOne({ _id: docId }, { $set: { isPublic: false } });
     const updateFile = await files.findOne({ _id: docId });
