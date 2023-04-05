@@ -1,9 +1,11 @@
 const uuidv4 = require('uuid').v4;
 const fs = require('fs');
 const { ObjectID } = require('mongodb');
+const Queue = require('bull');
 const mime = require('mime-types');
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
+const imageProcess = require('../worker');
 
 class FilesController {
   static async postUpload(req, res) {
@@ -94,6 +96,18 @@ class FilesController {
         parentId: body.parentId || 0,
         localPath: absoluteFilePath,
       });
+      console.log("In here");
+      if (body.type === 'image') {
+	console.log("In if");
+        // Adding the job to the queue
+	const imageQueue = new Queue('image transcodin', 'redis://0.0.0.0:6379');
+        imageQueue.process('../worker.js');
+	const data = { fileId: file._id, userId: file.userId };
+	const addJob = async () => {  
+          await imageQueue.add(data, { fileId: file._id, userId: file.userId });
+	}
+	addJob();
+      }
       const savedFile = file.ops[0];
       return res.status(201).json({
         id: savedFile._id,
@@ -185,6 +199,7 @@ class FilesController {
     const token = req.headers['x-token'];
     const userId = await redisClient.get(`auth_${token}`);
     const { id } = req.params;
+    const { size } = req.query;
 
     const files = await dbClient.db.collection('files');
     const file = await files.findOne({ _id: new ObjectID(id) });
@@ -213,7 +228,7 @@ class FilesController {
     }
 
     try {
-      const fileName = file.localPath;
+      const fileName = `${file.localPath}_${size}`;
       const contentType = mime.contentType(file.name);
       return res.header('Content-Type', contentType).status(200).sendFile(fileName);
     } catch (e) {
