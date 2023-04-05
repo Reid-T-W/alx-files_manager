@@ -246,10 +246,11 @@ class FilesController {
       return res.status(404).json({ error: 'Not found' });
     }
 
-    // const file = await files.findOne({ _id: docId });
-    // if (!file || file.userId !== userId) {
-    //   return res.status(404).json({ error: 'Not found' });
-    // }
+    const file = await files.findOne({ _id: docId });
+    if (!file || file.userId !== userId) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
     // Set isPublic to true
     await files.updateOne({ _id: docId }, { $set: { isPublic: true } });
     const updateFile = await files.findOne({ _id: docId });
@@ -287,10 +288,12 @@ class FilesController {
     if (!fileBasedOnId) {
       return res.status(404).json({ error: 'Not found' });
     }
-    // const file = await files.findOne({ _id: docId });
-    // if (!file || file.userId !== userId) {
-    //   return res.status(404).json({ error: 'Not found' });
-    // }
+
+    const file = await files.findOne({ _id: docId });
+    if (!file || file.userId !== userId) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
     // Set isPublic to false
     await files.updateOne({ _id: docId }, { $set: { isPublic: false } });
     const updateFile = await files.findOne({ _id: docId });
