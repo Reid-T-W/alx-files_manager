@@ -240,9 +240,7 @@ class FilesController {
       return res.status(404).json({ error: 'Not found' });
     }
     // Set isPublic to true
-    await files.updateOne({ _id: docId }, { $set: { isPublic: true } }, (err) => {
-      console.log(err);
-    });
+    await files.updateOne({ _id: docId }, { $set: { isPublic: true } });
     const updateFile = await files.findOne({ _id: docId });
     return res.status(200).json({
       id: updateFile._id,
@@ -273,9 +271,7 @@ class FilesController {
       return res.status(404).json({ error: 'Not found' });
     }
     // Set isPublic to false
-    await files.updateOne({ _id: docId }, { $set: { isPublic: false } }, (err) => {
-      console.log(err);
-    });
+    await files.updateOne({ _id: docId }, { $set: { isPublic: false } });
     const updateFile = await files.findOne({ _id: docId });
 
     return res.status(200).json({
