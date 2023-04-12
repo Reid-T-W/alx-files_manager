@@ -5,7 +5,7 @@ const Queue = require('bull');
 const mime = require('mime-types');
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
-const imageProcess = require('../worker');
+// const imageProcess = require('../worker');
 
 class FilesController {
   static async postUpload(req, res) {
@@ -82,11 +82,18 @@ class FilesController {
       }
       // Creating the file
       const absoluteFilePath = `${process.env.FOLDER_PATH}/${uuidv4()}`;
-      const decodedData = Buffer.from(body.data, 'base64').toString('ascii');
-      fs.appendFile(absoluteFilePath, decodedData, (err) => {
-        console.log(err);
-      });
-
+      if (body.type === 'file') {
+        const decodedData = Buffer.from(body.data, 'base64').toString('ascii');
+        fs.appendFile(absoluteFilePath, decodedData, (err) => {
+          console.log(err);
+        });
+      }
+      if (body.type === 'image') {
+        const decodedData = Buffer.from(body.data, 'base64');
+        fs.appendFile(absoluteFilePath, decodedData, (err) => {
+          console.log(err);
+        });
+      }
       const files = await dbClient.db.collection('files');
       const file = await files.insertOne({
         userId,
@@ -96,19 +103,12 @@ class FilesController {
         parentId: body.parentId || 0,
         localPath: absoluteFilePath,
       });
-      console.log("In here");
-      if (body.type === 'image') {
-	console.log("In if");
-        // Adding the job to the queue
-	const imageQueue = new Queue('image transcodin', 'redis://0.0.0.0:6379');
-        imageQueue.process('../worker.js');
-	const data = { fileId: file._id, userId: file.userId };
-	const addJob = async () => {  
-          await imageQueue.add(data, { fileId: file._id, userId: file.userId });
-	}
-	addJob();
-      }
       const savedFile = file.ops[0];
+      if (body.type === 'image') {
+        // Adding the job to the queue
+        const fileQueue = new Queue('fileQueue', 'redis://0.0.0.0:6379');
+        await fileQueue.add({ fileId: savedFile._id, userId: savedFile.userId });
+      }
       return res.status(201).json({
         id: savedFile._id,
         userId: savedFile.userId,
@@ -228,7 +228,12 @@ class FilesController {
     }
 
     try {
-      const fileName = `${file.localPath}_${size}`;
+      if (size) {
+        const fileName = `${file.localPath}_${size}`;
+        const contentType = mime.contentType(file.name);
+        return res.header('Content-Type', contentType).status(200).sendFile(fileName);
+      }
+      const fileName = file.localPath;
       const contentType = mime.contentType(file.name);
       return res.header('Content-Type', contentType).status(200).sendFile(fileName);
     } catch (e) {

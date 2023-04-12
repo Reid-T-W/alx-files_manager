@@ -1,20 +1,18 @@
 const imageThumbnail = require('image-thumbnail');
 const { ObjectID } = require('mongodb');
+const Queue = require('bull');
+const fs = require('fs');
 const dbClient = require('./utils/db');
 
+const fileQueue = new Queue('fileQueue', 'redis://0.0.0.0:6379');
 
-module.exports = async function (job) {
-//const imageProcess = async (job, done) => {
-  console.log("in worker");
-  console.log(job);
-  console.log(job.userId);
+// const imageProcess = async (job, done) => {
+fileQueue.process(async (job, done) => {
   if (!('fileId' in job.data)) {
-    console.log("in first error");
     throw new Error('Missing fileId');
   }
   if (!('userId' in job.data)) {
-    console.log("in second error");
-    throw new Error('Missing fileId');
+    throw new Error('Missing userId');
   }
   const files = await dbClient.db.collection('files');
   const file = await files.findOne({ _id: new ObjectID(job.data.fileId) });
@@ -29,11 +27,25 @@ module.exports = async function (job) {
   const width100 = { width: 100 };
 
   try {
-    console.log("creating");
-    const thumbnail500 = await imageThumbnail(`${file.localPath}_500`, width500);
-    const thumbnail250 = await imageThumbnail(`${file.localPath}_250`, width250);
-    const thumbnail100 = await imageThumbnail(`${file.localPath}_100`, width100);
+    console.log('in here');
+    console.log(job.data);
+    console.log(file.localPath);
+    const thumbnail500 = await imageThumbnail(`${file.localPath}`, width500);
+    const thumbnail250 = await imageThumbnail(`${file.localPath}`, width250);
+    const thumbnail100 = await imageThumbnail(`${file.localPath}`, width100);
+
+    // Writing the files to disk
+    fs.appendFile(`${file.localPath}_500`, thumbnail500, (err) => {
+      console.log(err);
+    });
+    fs.appendFile(`${file.localPath}_250`, thumbnail250, (err) => {
+      console.log(err);
+    });
+    fs.appendFile(`${file.localPath}_100`, thumbnail100, (err) => {
+      console.log(err);
+    });
+    done();
   } catch (err) {
     console.error(err);
   }
-};
+});
