@@ -5,8 +5,9 @@ const fs = require('fs');
 const dbClient = require('./utils/db');
 
 const fileQueue = new Queue('fileQueue', 'redis://0.0.0.0:6379');
+const userQueue = new Queue('userQueue', 'redis://0.0.0.0:6379');
 
-// const imageProcess = async (job, done) => {
+// Processing the fileQueue
 fileQueue.process(async (job, done) => {
   if (!('fileId' in job.data)) {
     throw new Error('Missing fileId');
@@ -27,9 +28,6 @@ fileQueue.process(async (job, done) => {
   const width100 = { width: 100 };
 
   try {
-    console.log('in here');
-    console.log(job.data);
-    console.log(file.localPath);
     const thumbnail500 = await imageThumbnail(`${file.localPath}`, width500);
     const thumbnail250 = await imageThumbnail(`${file.localPath}`, width250);
     const thumbnail100 = await imageThumbnail(`${file.localPath}`, width100);
@@ -48,4 +46,20 @@ fileQueue.process(async (job, done) => {
   } catch (err) {
     console.error(err);
   }
+});
+
+// Processing the userQueue
+userQueue.process(async (job, done) => {
+  if (!('userId' in job.data)) {
+    throw new Error('Missing userId');
+  }
+  const users = await dbClient.db.collection('users');
+  const user = await users.findOne({ _id: new ObjectID(job.data.userId) });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  console.log(`Welcome ${user.email}`);
+  done();
 });

@@ -1,5 +1,6 @@
 const sha1 = require('sha1');
 const { ObjectID } = require('mongodb');
+const Queue = require('bull');
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
 
@@ -27,7 +28,11 @@ class UsersController {
       email,
       password: hashedPassword,
     });
-
+    const saveduser = user.ops[0];
+    if (user) {
+      const userQueue = new Queue('userQueue', 'redis://0.0.0.0:6379');
+      await userQueue.add({ userId: saveduser._id });
+    }
     return res.status(201).json({ id: user.insertedId, email });
   }
 
